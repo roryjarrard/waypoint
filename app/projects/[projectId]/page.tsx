@@ -1,24 +1,30 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TaskPriorityBadge } from "@/components/TaskPriorityBadge";
 import { TaskStatusBadge } from "@/components/TaskStatusBadge";
-import { mockProjects, mockTasks } from "@/lib/mock-data";
+import { getProjectById, getTasksByProjectId } from "@/lib/data";
 
 export default async function ProjectDetailPage({
   params,
 }: PageProps<"/projects/[projectId]">) {
   const { projectId } = await params;
-  const project = mockProjects.find((p) => p.id === projectId);
+  const project = await getProjectById(projectId);
 
   if (!project) {
     notFound();
   }
 
-  const projectTasks = mockTasks.filter(
-    (task) => task.projectId === project.id,
-  );
+  const projectTasks = await getTasksByProjectId(project.id);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
+      <Link
+        href="/dashboard"
+        className="text-sm font-medium text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+      >
+        &larr; Back to dashboard
+      </Link>
+
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
           {project.name}
@@ -56,6 +62,16 @@ export default async function ProjectDetailPage({
                 <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                   {task.description}
                 </p>
+                {task.dueDate && (
+                  <p className="text-xs text-zinc-500 dark:text-zinc-500">
+                    Due{" "}
+                    {new Date(task.dueDate).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
