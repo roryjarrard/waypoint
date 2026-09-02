@@ -6,33 +6,20 @@ See [`docs/product.md`](docs/product.md) for full product scope and [`docs/data-
 
 ## Tech Stack
 
-### Current
-
-- Next.js App Router with React 19
-- TypeScript
+- [Next.js](https://nextjs.org) (App Router) with React 19
+- PostgreSQL + Prisma (local via Docker Compose, Neon for staging/production)
 - Tailwind CSS v4
-
-### Planned
-
-- PostgreSQL with Prisma
-- Docker Compose for local development
-- Neon for staging and production
-- Vercel for deployment
-- GraphQL
-- Zustand
+- Deployed on Vercel
 
 GraphQL and Zustand are intentionally deferred until they're needed — see `docs/product.md` for the planned sequence.
 
 ## Getting Started
 
-Install dependencies and start the development server:
-
 ```bash
-npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) to see the result.
 
 ## Commands
 
