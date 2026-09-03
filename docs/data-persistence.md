@@ -9,23 +9,23 @@ Accepted
 Waypoint will use PostgreSQL with Prisma for persistent application data.
 
 - Local development uses PostgreSQL running locally through Docker Compose.
-- Staging uses a dedicated Neon PostgreSQL database.
-- Production uses a separate Neon PostgreSQL database.
-- The application is deployed with Vercel.
-- Vercel Preview deployments use the staging database.
-- Vercel Production deployments use the production database.
+- Staging and production use separate branches within one Neon project.
+- The Neon `production` branch stores production data.
+- The Neon `staging` branch contains only synthetic or test data.
+- Vercel Preview deployments use the staging branch.
+- Vercel Production deployments use the production branch.
 
-Staging and production must use separate databases, credentials, and data.
+Staging and production must use separate Neon branches, connection strings, and data.
 
 ## Configuration
 
 Application code must read the database connection from the server-only `DATABASE_URL` environment variable. Code must not select a database URL by inspecting `NODE_ENV` or another runtime environment name.
 
-| Environment | Configuration source | Database |
+| Environment | Configuration source | Database environment |
 | --- | --- | --- |
 | Local | `.env.local` | Local PostgreSQL |
-| Staging | Vercel Preview environment | Neon staging |
-| Production | Vercel Production environment | Neon production |
+| Staging | Vercel Preview environment | Neon `staging` branch |
+| Production | Vercel Production environment | Neon `production` branch |
 
 Requirements:
 
@@ -34,6 +34,12 @@ Requirements:
 - Keep `.env.example` limited to documented placeholder values.
 - Database access must remain in server-only modules.
 - Mark shared database modules with `server-only` when appropriate to prevent accidental client imports.
+
+### Neon Connections
+
+Application runtime traffic uses each branch’s pooled Neon connection string. Prisma migration commands use the corresponding direct connection string.
+
+Production and staging connection strings must never be shared across Vercel environments.
 
 ## Environment Isolation
 
@@ -87,6 +93,6 @@ The following choices will be made when their implementation becomes necessary:
 
 - Authentication provider
 - Production migration automation
-- Per-branch Neon databases for isolated Preview deployments
+- Ephemeral Neon branches for isolated pull-request Preview deployments
 - Backup and retention policy beyond Neon defaults
 - Connection-pooling configuration based on the selected Prisma and Neon integration
