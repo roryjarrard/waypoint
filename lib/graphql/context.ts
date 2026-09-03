@@ -1,7 +1,20 @@
 import "server-only";
 
+import {
+  getProjectByIdForOwner,
+  getProjectsByOwnerId,
+  getTasksByProjectIdForOwner,
+} from "@/lib/data";
+
+export type GraphQLDataAccess = {
+  getProjectsByOwnerId: typeof getProjectsByOwnerId;
+  getProjectByIdForOwner: typeof getProjectByIdForOwner;
+  getTasksByProjectIdForOwner: typeof getTasksByProjectIdForOwner;
+};
+
 export type GraphQLContext = {
   userId: string;
+  dataAccess: GraphQLDataAccess;
 };
 
 export function createGraphQLContext(): GraphQLContext {
@@ -11,5 +24,12 @@ export function createGraphQLContext(): GraphQLContext {
     throw new Error("WAYPOINT_DEV_USER_ID is not defined");
   }
 
-  return { userId };
+  return {
+    userId,
+    dataAccess: {
+      getProjectsByOwnerId,
+      getProjectByIdForOwner,
+      getTasksByProjectIdForOwner,
+    },
+  };
 }

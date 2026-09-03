@@ -1,10 +1,5 @@
 import { createSchema } from "graphql-yoga";
 import { GraphQLContext } from "./context";
-import {
-  getProjectByIdForOwner,
-  getProjectsByOwnerId,
-  getTasksByProjectIdForOwner,
-} from "../data";
 import type { Project } from "../types";
 
 export const schema = createSchema<GraphQLContext>({
@@ -37,14 +32,17 @@ export const schema = createSchema<GraphQLContext>({
   resolvers: {
     Query: {
       projects: (_parent, _args, context) =>
-        getProjectsByOwnerId(context.userId),
+        context.dataAccess.getProjectsByOwnerId(context.userId),
       project: (_parent, args: { id: string }, context) =>
-        getProjectByIdForOwner(context.userId, args.id),
+        context.dataAccess.getProjectByIdForOwner(context.userId, args.id),
     },
 
     Project: {
       tasks: (project: Project, _args, context) =>
-        getTasksByProjectIdForOwner(context.userId, project.id),
+        context.dataAccess.getTasksByProjectIdForOwner(
+          context.userId,
+          project.id,
+        ),
     },
   },
 });
