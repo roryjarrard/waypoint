@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for the next architectural slice
+Implemented
 
 ## Decision
 
@@ -11,6 +11,14 @@ GraphQL will be introduced as a server-side API boundary over Waypoint's existin
 The first implementation branch will be:
 
 `feat/graphql-foundation`
+
+## Server Library
+
+Waypoint uses GraphQL Yoga with GraphQL.js.
+
+GraphQL Yoga was selected because its Fetch API-based handler integrates directly with Next.js App Router Route Handlers. It also keeps the HTTP endpoint, schema, request context, and data-access dependencies separable and independently testable.
+
+During this pre-authentication slice, the endpoint is restricted to local development so the temporary seed-user identity cannot expose user data through a public production API.
 
 ## First-Slice Scope
 
