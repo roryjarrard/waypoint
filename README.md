@@ -6,33 +6,20 @@ See [`docs/product.md`](docs/product.md) for full product scope and [`docs/data-
 
 ## Tech Stack
 
-### Current
-
-- Next.js App Router with React 19
-- TypeScript
+- [Next.js](https://nextjs.org) (App Router) with React 19
+- PostgreSQL + Prisma (local via Docker Compose, Neon for staging/production)
 - Tailwind CSS v4
-
-### Planned
-
-- PostgreSQL with Prisma
-- Docker Compose for local development
-- Neon for staging and production
-- Vercel for deployment
-- GraphQL
-- Zustand
+- Deployed on Vercel
 
 GraphQL and Zustand are intentionally deferred until they're needed — see `docs/product.md` for the planned sequence.
 
 ## Getting Started
 
-Install dependencies and start the development server:
-
 ```bash
-npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) to see the result.
 
 ## Commands
 
@@ -40,9 +27,81 @@ Open [http://localhost:3000](http://localhost:3000).
 - `npm run build` — production build
 - `npm run start` — run production build
 - `npm run lint` — run ESLint
+- `npm test` - run the GraphQL boundary tests
 
-There is no test setup yet.
+## Local GraphQL Development
+
+The GraphQL endpoint is available only during local development:
+
+```text
+http://localhost:3000/api/graphql
+```
+
+Set the deterministic development-user ID in `.env.local`:
+
+```env
+WAYPOINT_DEV_USER_ID=00000000-0000-4000-8000-000000000001
+```
+
+Seed the local database with the same identity:
+
+```bash
+WAYPOINT_DEV_USER_ID=00000000-0000-4000-8000-000000000001 npm exec prisma db seed
+```
+
+Then start the application:
+
+```bash
+npm run dev
+```
+
+Opening the endpoint in a browser displays GraphiQL.
+
+List the development user’s projects:
+
+```graphql
+query Projects {
+  projects {
+    id
+    name
+    description
+  }
+}
+```
+
+Retrieve one owned project with its tasks:
+
+```graphql
+query Project($id: ID!) {
+  project(id: $id) {
+    id
+    name
+    description
+    tasks {
+      id
+      title
+      status
+      priority
+      dueDate
+    }
+  }
+}
+```
+
+Use variables such as:
+
+```json
+{
+  "id": "00000000-0000-4000-8000-000000000101"
+}
+```
+
+Request identity comes from server-side configuration. It is not accepted from GraphQL arguments or request headers. Until authentication is implemented, the GraphQL endpoint returns `404` outside local development.
 
 ## Project Status
 
-Waypoint is in early, incremental development. The current focus is establishing the domain model and core project/task workflows before adding authentication, GraphQL, and client-side state management.
+Waypoint has established its initial project and task domain, PostgreSQL persistence through Prisma, and a read-only GraphQL foundation.
+
+The GraphQL API currently supports listing the development user’s projects and retrieving one owned project with its tasks. Request identity temporarily comes from server-side development configuration, and the endpoint is restricted to local development.
+
+The next architectural slice is authentication, including resolving an external provider identity to Waypoint’s internal user UUID. GraphQL mutations, client integration, code generation, and Zustand remain deferred.
