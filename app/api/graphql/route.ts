@@ -1,11 +1,25 @@
-import { createGraphQLContext } from "@/lib/graphql/context";
-import { schema } from "@/lib/graphql/schema";
 import { createYoga } from "graphql-yoga";
 
-const yoga = createYoga({
+import { createGraphQLContext } from "@/lib/graphql/context";
+import { schema } from "@/lib/graphql/schema";
+
+const { handleRequest } = createYoga({
   schema,
   graphqlEndpoint: "/api/graphql",
   context: createGraphQLContext,
+  fetchAPI: { Response },
 });
 
-export { yoga as GET, yoga as POST, yoga as OPTIONS };
+async function handleLocalRequest(request: Request): Promise<Response> {
+  if (process.env.NODE_ENV === "production") {
+    return new Response(null, { status: 404 });
+  }
+
+  return await handleRequest(request, {});
+}
+
+export {
+  handleLocalRequest as GET,
+  handleLocalRequest as POST,
+  handleLocalRequest as OPTIONS,
+};
