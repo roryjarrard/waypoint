@@ -1,9 +1,16 @@
 import { Suspense } from "react";
-import { ProjectCard } from "@/components/ProjectCard";
-import { getProjects, getTasksByProjectId } from "@/lib/data";
+import { redirect } from "next/navigation";
 
-async function ProjectsGrid() {
-  const projects = await getProjects();
+import { ProjectCard } from "@/components/ProjectCard";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
+import { getProjectsByOwnerId, getTasksByProjectIdForOwner } from "@/lib/data";
+
+type ProjectsGridProps = {
+  userId: string;
+};
+
+async function ProjectsGrid({ userId }: ProjectsGridProps) {
+  const projects = await getProjectsByOwnerId(userId);
 
   if (projects.length === 0) {
     return (
@@ -17,7 +24,11 @@ async function ProjectsGrid() {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {await Promise.all(
         projects.map(async (project) => {
-          const projectTasks = await getTasksByProjectId(project.id);
+          const projectTasks = await getTasksByProjectIdForOwner(
+            userId,
+            project.id,
+          );
+
           const completedTaskCount = projectTasks.filter(
             (task) => task.status === "done",
           ).length;
@@ -36,7 +47,13 @@ async function ProjectsGrid() {
   );
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login?returnTo=/dashboard");
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-12">
       <div className="flex flex-col gap-2">
@@ -55,7 +72,7 @@ export default function DashboardPage() {
           </p>
         }
       >
-        <ProjectsGrid />
+        <ProjectsGrid userId={user.id} />
       </Suspense>
     </main>
   );

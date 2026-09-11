@@ -37,16 +37,16 @@ The GraphQL endpoint is available only during local development:
 http://localhost:3000/api/graphql
 ```
 
-Set the deterministic development-user ID in `.env.local`:
+Set the deterministic seed-user ID in `.env.local`:
 
 ```env
-WAYPOINT_DEV_USER_ID=00000000-0000-4000-8000-000000000001
+WAYPOINT_SEED_USER_ID=00000000-0000-4000-8000-000000000001
 ```
 
 Seed the local database with the same identity:
 
 ```bash
-WAYPOINT_DEV_USER_ID=00000000-0000-4000-8000-000000000001 npm exec prisma db seed
+WAYPOINT_SEED_USER_ID=00000000-0000-4000-8000-000000000001 npm exec prisma db seed
 ```
 
 Then start the application:

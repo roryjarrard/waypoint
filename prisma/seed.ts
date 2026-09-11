@@ -4,14 +4,14 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
 
 const connectionString = process.env.DATABASE_URL;
-const developmentUserId = process.env.WAYPOINT_DEV_USER_ID;
+const seedUserId = process.env.WAYPOINT_SEED_USER_ID;
 
 if (!connectionString) {
   throw new Error("DATABASE_URL is not defined");
 }
 
-if (!developmentUserId) {
-  throw new Error("WAYPOINT_DEV_USER_ID is not defined");
+if (!seedUserId) {
+  throw new Error("WAYPOINT_SEED_USER_ID is not defined");
 }
 
 const adapter = new PrismaPg({ connectionString });
@@ -23,11 +23,11 @@ async function main() {
       email: "dev@waypoint.local",
     },
     update: {
-      id: developmentUserId,
+      id: seedUserId,
       name: "Development User",
     },
     create: {
-      id: developmentUserId,
+      id: seedUserId,
       name: "Development User",
       email: "dev@waypoint.local",
     },

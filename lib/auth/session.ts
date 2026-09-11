@@ -1,0 +1,6 @@
+export const SESSION_COOKIE_NAME = "waypoint-session";
+
+export const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 5;
+export const SESSION_DURATION_MILLISECONDS = SESSION_DURATION_SECONDS * 1000;
+
+export const RECENT_SIGN_IN_SECONDS = 60 * 5;
