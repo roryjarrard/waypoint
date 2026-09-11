@@ -11,7 +11,7 @@ See [`docs/product.md`](docs/product.md) for full product scope and [`docs/data-
 - Tailwind CSS v4
 - Deployed on Vercel
 
-GraphQL and Zustand are intentionally deferred until they're needed — see `docs/product.md` for the planned sequence.
+GraphQL is implemented through GraphQL Yoga and currently supports project and task queries backed by PostgreSQL and Prisma. Mutations will be added as write workflows are introduced. Zustand remains intentionally deferred until the application requires shared client-side state. See `docs/product.md` for the planned sequence.
 
 ## Getting Started
 
