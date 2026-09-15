@@ -22,7 +22,7 @@ export function SignOutButton() {
         throw new Error("Unable to delete the server session.");
       }
 
-      router.replace("/login");
+      router.replace("/");
       router.refresh();
     } catch {
       setErrorMessage("Unable to sign out. Please try again.");
