@@ -104,4 +104,4 @@ Waypoint has established its initial project and task domain, PostgreSQL persist
 
 The GraphQL API currently supports listing the development user’s projects and retrieving one owned project with its tasks. Request identity temporarily comes from server-side development configuration, and the endpoint is restricted to local development.
 
-The next architectural slice is authentication, including resolving an external provider identity to Waypoint’s internal user UUID. GraphQL mutations, client integration, code generation, and Zustand remain deferred.
+Firebase Authentication is implemented with email/password registration and sign-in, HTTP-only server sessions, protected application routes, sign-out, and automatic mapping from a Firebase identity to Waypoint’s internal user UUID. Project and task reads are scoped to the authenticated user. The next architectural slice is GraphQL mutations and client integration; GraphQL code generation and Zustand remain deferred until they provide clear value.

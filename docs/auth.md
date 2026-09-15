@@ -205,4 +205,3 @@ The authentication slice should test at least:
 - Account deletion and corresponding domain-data behavior
 - Linking multiple Firebase providers to one Waypoint user
 - Roles, teams, or organization-level authorization
-
