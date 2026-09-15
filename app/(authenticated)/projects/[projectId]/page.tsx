@@ -1,20 +1,34 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+
 import { TaskPriorityBadge } from "@/components/TaskPriorityBadge";
 import { TaskStatusBadge } from "@/components/TaskStatusBadge";
-import { getProjectById, getTasksByProjectId } from "@/lib/data";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
+import {
+  getProjectByIdForOwner,
+  getTasksByProjectIdForOwner,
+} from "@/lib/data";
 
 export default async function ProjectDetailPage({
   params,
 }: PageProps<"/projects/[projectId]">) {
   const { projectId } = await params;
-  const project = await getProjectById(projectId);
+  console.log(projectId);
+  const user = await getCurrentUser();
+
+  if (!user) {
+    const returnTo = encodeURIComponent(`/projects/${projectId}`);
+    redirect(`/login?returnTo=${returnTo}`);
+  }
+
+  console.log("user id", user.id);
+  const project = await getProjectByIdForOwner(user.id, projectId);
 
   if (!project) {
     notFound();
   }
 
-  const projectTasks = await getTasksByProjectId(project.id);
+  const projectTasks = await getTasksByProjectIdForOwner(user.id, project.id);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">

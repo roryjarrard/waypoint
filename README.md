@@ -11,7 +11,7 @@ See [`docs/product.md`](docs/product.md) for full product scope and [`docs/data-
 - Tailwind CSS v4
 - Deployed on Vercel
 
-GraphQL and Zustand are intentionally deferred until they're needed — see `docs/product.md` for the planned sequence.
+GraphQL is implemented through GraphQL Yoga and currently supports project and task queries backed by PostgreSQL and Prisma. Mutations will be added as write workflows are introduced. Zustand remains intentionally deferred until the application requires shared client-side state. See `docs/product.md` for the planned sequence.
 
 ## Getting Started
 
@@ -37,16 +37,16 @@ The GraphQL endpoint is available only during local development:
 http://localhost:3000/api/graphql
 ```
 
-Set the deterministic development-user ID in `.env.local`:
+Set the deterministic seed-user ID in `.env.local`:
 
 ```env
-WAYPOINT_DEV_USER_ID=00000000-0000-4000-8000-000000000001
+WAYPOINT_SEED_USER_ID=00000000-0000-4000-8000-000000000001
 ```
 
 Seed the local database with the same identity:
 
 ```bash
-WAYPOINT_DEV_USER_ID=00000000-0000-4000-8000-000000000001 npm exec prisma db seed
+WAYPOINT_SEED_USER_ID=00000000-0000-4000-8000-000000000001 npm exec prisma db seed
 ```
 
 Then start the application:
@@ -104,4 +104,4 @@ Waypoint has established its initial project and task domain, PostgreSQL persist
 
 The GraphQL API currently supports listing the development user’s projects and retrieving one owned project with its tasks. Request identity temporarily comes from server-side development configuration, and the endpoint is restricted to local development.
 
-The next architectural slice is authentication, including resolving an external provider identity to Waypoint’s internal user UUID. GraphQL mutations, client integration, code generation, and Zustand remain deferred.
+Firebase Authentication is implemented with email/password registration and sign-in, HTTP-only server sessions, protected application routes, sign-out, and automatic mapping from a Firebase identity to Waypoint’s internal user UUID. Project and task reads are scoped to the authenticated user. The next architectural slice is GraphQL mutations and client integration; GraphQL code generation and Zustand remain deferred until they provide clear value.

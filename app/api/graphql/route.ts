@@ -10,16 +10,20 @@ const { handleRequest } = createYoga({
   fetchAPI: { Response },
 });
 
-async function handleLocalRequest(request: Request): Promise<Response> {
+async function handleGetRequest(request: Request): Promise<Response> {
   if (process.env.NODE_ENV === "production") {
     return new Response(null, { status: 404 });
   }
 
-  return await handleRequest(request, {});
+  return handleRequest(request, {});
+}
+
+async function handleGraphQLRequest(request: Request): Promise<Response> {
+  return handleRequest(request, {});
 }
 
 export {
-  handleLocalRequest as GET,
-  handleLocalRequest as POST,
-  handleLocalRequest as OPTIONS,
+  handleGetRequest as GET,
+  handleGraphQLRequest as POST,
+  handleGraphQLRequest as OPTIONS,
 };
