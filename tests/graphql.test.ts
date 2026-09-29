@@ -11,6 +11,9 @@ test("projects uses the trusted context user ID", async () => {
   const context: GraphQLContext = {
     userId: "user-1",
     dataAccess: {
+      async createProject() {
+        throw new Error("Unexpected mutation");
+      },
       async getProjectsByOwnerId(ownerId) {
         receivedOwnerId = ownerId;
         return [];
@@ -48,6 +51,9 @@ test("returns an owned project with its tasks", async () => {
   const context: GraphQLContext = {
     userId: "user-1",
     dataAccess: {
+      async createProject() {
+        throw new Error("Unexpected mutation");
+      },
       async getProjectsByOwnerId() {
         return [];
       },
@@ -127,6 +133,9 @@ test("does not return a project owned by another user", async () => {
   const context: GraphQLContext = {
     userId: "user-1",
     dataAccess: {
+      async createProject() {
+        throw new Error("Unexpected mutation");
+      },
       async getProjectsByOwnerId() {
         return [];
       },
@@ -164,4 +173,60 @@ test("does not return a project owned by another user", async () => {
 
   assert.equal(result.errors, undefined);
   assert.deepEqual(JSON.parse(JSON.stringify(result.data)), { project: null });
+});
+
+test("createProject validates input and uses the trusted context user ID", async () => {
+  let writes = 0;
+  const context: GraphQLContext = {
+    userId: "user-1",
+    dataAccess: {
+      async createProject(ownerId, input) {
+        writes++;
+        assert.equal(ownerId, "user-1");
+        assert.deepEqual(input, { name: "New project", description: null });
+        return {
+          id: "project-2",
+          ownerId,
+          name: input.name,
+          description: "",
+          createdAt: "2026-09-29T00:00:00.000Z",
+          updatedAt: "2026-09-29T00:00:00.000Z",
+        };
+      },
+      async getProjectsByOwnerId() {
+        return [];
+      },
+      async getProjectByIdForOwner() {
+        return null;
+      },
+      async getTasksByProjectIdForOwner() {
+        return [];
+      },
+    },
+  };
+
+  const source = `mutation Create($input: CreateProjectInput!) {
+    createProject(input: $input) { id name description }
+  }`;
+
+  const invalid = await graphql({
+    schema,
+    source,
+    contextValue: context,
+    variableValues: { input: { name: "   " } },
+  });
+  assert.equal(invalid.errors?.[0]?.extensions.code, "BAD_USER_INPUT");
+  assert.equal(writes, 0);
+
+  const result = await graphql({
+    schema,
+    source,
+    contextValue: context,
+    variableValues: { input: { name: "  New project  " } },
+  });
+  assert.equal(result.errors, undefined);
+  assert.equal(writes, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.data)), {
+    createProject: { id: "project-2", name: "New project", description: "" },
+  });
 });

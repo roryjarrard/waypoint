@@ -1,9 +1,41 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { graphql } from "graphql";
 
 import { ProjectCard } from "@/components/ProjectCard";
+import { CreateProjectForm } from "@/components/CreateProjectForm";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { getProjectsByOwnerId, getTasksByProjectIdForOwner } from "@/lib/data";
+import { createGraphQLContext } from "@/lib/graphql/context";
+import { schema } from "@/lib/graphql/schema";
+
+async function createProjectAction(
+  _previousState: { error: string | null },
+  formData: FormData,
+): Promise<{ error: string | null }> {
+  "use server";
+
+  const name = formData.get("name");
+  const description = formData.get("description");
+  if (typeof name !== "string" || typeof description !== "string") {
+    return { error: "Invalid project form submission." };
+  }
+
+  const result = await graphql({
+    schema,
+    source: `mutation CreateProject($input: CreateProjectInput!) {
+      createProject(input: $input) { id }
+    }`,
+    variableValues: { input: { name, description } },
+    contextValue: await createGraphQLContext(),
+  });
+
+  if (result.errors?.length) {
+    return { error: result.errors[0].message };
+  }
+
+  redirect("/dashboard");
+}
 
 type ProjectsGridProps = {
   userId: string;
@@ -64,6 +96,8 @@ export default async function DashboardPage() {
           An overview of your active projects and their progress.
         </p>
       </div>
+
+      <CreateProjectForm action={createProjectAction} />
 
       <Suspense
         fallback={

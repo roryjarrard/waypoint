@@ -60,6 +60,21 @@ export async function getProjectsByOwnerId(
   return projects.map(mapProject);
 }
 
+export async function createProject(
+  ownerId: string,
+  input: { name: string; description?: string | null },
+): Promise<Project> {
+  const project = await prisma.project.create({
+    data: {
+      ownerId,
+      name: input.name,
+      description: input.description ?? null,
+    },
+  });
+
+  return mapProject(project);
+}
+
 export async function getProjectByIdForOwner(
   ownerId: string,
   projectId: string,

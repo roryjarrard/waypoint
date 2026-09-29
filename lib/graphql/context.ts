@@ -4,12 +4,14 @@ import { GraphQLError } from "graphql";
 
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import {
+  createProject,
   getProjectByIdForOwner,
   getProjectsByOwnerId,
   getTasksByProjectIdForOwner,
 } from "@/lib/data";
 
 export type GraphQLDataAccess = {
+  createProject: typeof createProject;
   getProjectsByOwnerId: typeof getProjectsByOwnerId;
   getProjectByIdForOwner: typeof getProjectByIdForOwner;
   getTasksByProjectIdForOwner: typeof getTasksByProjectIdForOwner;
@@ -34,6 +36,7 @@ export async function createGraphQLContext(): Promise<GraphQLContext> {
   return {
     userId: user.id,
     dataAccess: {
+      createProject,
       getProjectsByOwnerId,
       getProjectByIdForOwner,
       getTasksByProjectIdForOwner,
