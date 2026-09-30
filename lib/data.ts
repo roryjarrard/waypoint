@@ -89,6 +89,19 @@ export async function getProjectByIdForOwner(
   return project ? mapProject(project) : null;
 }
 
+export async function updateProjectForOwner(
+  ownerId: string,
+  projectId: string,
+  input: { name?: string; description?: string | null },
+): Promise<Project | null> {
+  const projects = await prisma.project.updateManyAndReturn({
+    where: { id: projectId, ownerId },
+    data: input,
+  });
+
+  return projects[0] ? mapProject(projects[0]) : null;
+}
+
 export async function getTasksByProjectIdForOwner(
   ownerId: string,
   projectId: string,

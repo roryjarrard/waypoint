@@ -5,6 +5,7 @@ import { GraphQLError } from "graphql";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 import {
   createProject,
+  updateProjectForOwner,
   getProjectByIdForOwner,
   getProjectsByOwnerId,
   getTasksByProjectIdForOwner,
@@ -12,6 +13,7 @@ import {
 
 export type GraphQLDataAccess = {
   createProject: typeof createProject;
+  updateProjectForOwner: typeof updateProjectForOwner;
   getProjectsByOwnerId: typeof getProjectsByOwnerId;
   getProjectByIdForOwner: typeof getProjectByIdForOwner;
   getTasksByProjectIdForOwner: typeof getTasksByProjectIdForOwner;
@@ -37,6 +39,7 @@ export async function createGraphQLContext(): Promise<GraphQLContext> {
     userId: user.id,
     dataAccess: {
       createProject,
+      updateProjectForOwner,
       getProjectsByOwnerId,
       getProjectByIdForOwner,
       getTasksByProjectIdForOwner,

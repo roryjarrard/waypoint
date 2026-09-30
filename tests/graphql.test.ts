@@ -5,12 +5,157 @@ import { graphql } from "graphql";
 import type { GraphQLContext } from "@/lib/graphql/context";
 import { schema } from "@/lib/graphql/schema";
 
+const updateProjectSource = `
+  mutation UpdateProject($id: ID!, $input: UpdateProjectInput!) {
+    updateProject(id: $id, input: $input) { id name description }
+  }
+`;
+
+function updateContext(
+  updateProjectForOwner: GraphQLContext["dataAccess"]["updateProjectForOwner"],
+): GraphQLContext {
+  return {
+    userId: "user-1",
+    dataAccess: {
+      updateProjectForOwner,
+      async createProject() {
+        throw new Error("Unexpected create");
+      },
+      async getProjectsByOwnerId() {
+        return [];
+      },
+      async getProjectByIdForOwner() {
+        return null;
+      },
+      async getTasksByProjectIdForOwner() {
+        return [];
+      },
+    },
+  };
+}
+
+test("updateProject uses trusted ownership, trims fields, and preserves omitted fields", async () => {
+  const cases = [
+    { input: { name: "  Renamed  " }, expected: { name: "Renamed" } },
+    {
+      input: { description: "  Revised  " },
+      expected: { description: "Revised" },
+    },
+    { input: { description: null }, expected: { description: null } },
+    { input: { description: "   " }, expected: { description: null } },
+    {
+      input: { name: "Renamed", description: "Revised" },
+      expected: { name: "Renamed", description: "Revised" },
+    },
+  ];
+
+  for (const { input, expected } of cases) {
+    let writes = 0;
+    const context = updateContext(async (ownerId, projectId, update) => {
+      writes++;
+      assert.equal(ownerId, "user-1");
+      assert.equal(projectId, "project-1");
+      assert.deepEqual(update, expected);
+      return {
+        id: projectId,
+        ownerId,
+        name: update.name ?? "Original",
+        description:
+          update.description === undefined
+            ? "Original description"
+            : (update.description ?? ""),
+        createdAt: "2026-09-29T00:00:00.000Z",
+        updatedAt: "2026-09-29T01:00:00.000Z",
+      };
+    });
+    const result = await graphql({
+      schema,
+      source: updateProjectSource,
+      contextValue: context,
+      variableValues: { id: "project-1", input },
+    });
+    assert.equal(result.errors, undefined);
+    assert.equal(writes, 1);
+    assert.deepEqual(JSON.parse(JSON.stringify(result.data)), {
+      updateProject: {
+        id: "project-1",
+        name: expected.name ?? "Original",
+        description:
+          expected.description === undefined
+            ? "Original description"
+            : (expected.description ?? ""),
+      },
+    });
+  }
+});
+
+test("updateProject rejects invalid input before writing", async () => {
+  let writes = 0;
+  const context = updateContext(async () => {
+    writes++;
+    return null;
+  });
+  for (const input of [
+    {},
+    { name: null },
+    { name: "   " },
+    { name: "x".repeat(121) },
+    { description: "x".repeat(501) },
+  ]) {
+    const result = await graphql({
+      schema,
+      source: updateProjectSource,
+      contextValue: context,
+      variableValues: { id: "project-1", input },
+    });
+    assert.equal(result.errors?.[0]?.extensions.code, "BAD_USER_INPUT");
+  }
+  assert.equal(writes, 0);
+});
+
+test("updateProject returns NOT_FOUND for missing or inaccessible projects", async () => {
+  const context = updateContext(async (ownerId, projectId) => {
+    assert.equal(ownerId, "user-1");
+    assert.ok(["missing-project", "other-project"].includes(projectId));
+    return null;
+  });
+  for (const id of ["missing-project", "other-project"]) {
+    const result = await graphql({
+      schema,
+      source: updateProjectSource,
+      contextValue: context,
+      variableValues: { id, input: { name: "Renamed" } },
+    });
+    assert.equal(result.errors?.[0]?.extensions.code, "NOT_FOUND");
+    assert.equal(result.data, null);
+  }
+});
+
+test("updateProject does not accept a client-supplied owner ID", async () => {
+  const context = updateContext(async () => {
+    throw new Error("Should not write");
+  });
+  const result = await graphql({
+    schema,
+    source: updateProjectSource,
+    contextValue: context,
+    variableValues: {
+      id: "project-1",
+      input: { name: "Renamed", ownerId: "other-user" },
+    },
+  });
+  assert.ok(result.errors?.length);
+});
+
 test("projects uses the trusted context user ID", async () => {
   let receivedOwnerId: string | undefined;
 
   const context: GraphQLContext = {
     userId: "user-1",
     dataAccess: {
+      async updateProjectForOwner() {
+        throw new Error("Unexpected update");
+      },
       async createProject() {
         throw new Error("Unexpected mutation");
       },
@@ -51,6 +196,9 @@ test("returns an owned project with its tasks", async () => {
   const context: GraphQLContext = {
     userId: "user-1",
     dataAccess: {
+      async updateProjectForOwner() {
+        throw new Error("Unexpected update");
+      },
       async createProject() {
         throw new Error("Unexpected mutation");
       },
@@ -133,6 +281,9 @@ test("does not return a project owned by another user", async () => {
   const context: GraphQLContext = {
     userId: "user-1",
     dataAccess: {
+      async updateProjectForOwner() {
+        throw new Error("Unexpected update");
+      },
       async createProject() {
         throw new Error("Unexpected mutation");
       },
@@ -180,6 +331,9 @@ test("createProject validates input and uses the trusted context user ID", async
   const context: GraphQLContext = {
     userId: "user-1",
     dataAccess: {
+      async updateProjectForOwner() {
+        throw new Error("Unexpected update");
+      },
       async createProject(ownerId, input) {
         writes++;
         assert.equal(ownerId, "user-1");
