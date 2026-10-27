@@ -30,6 +30,9 @@ function updateContext(
       async getTasksByProjectIdForOwner() {
         return [];
       },
+      async deleteProjectForOwner() {
+        throw new Error("Unexpected delete");
+      },
     },
   };
 }
@@ -171,6 +174,9 @@ test("projects uses the trusted context user ID", async () => {
       async getTasksByProjectIdForOwner() {
         return [];
       },
+      async deleteProjectForOwner() {
+        throw new Error("Unexpected delete");
+      },
     },
   };
 
@@ -238,6 +244,9 @@ test("returns an owned project with its tasks", async () => {
           },
         ];
       },
+      async deleteProjectForOwner() {
+        throw new Error("Unexpected delete");
+      },
     },
   };
 
@@ -303,6 +312,10 @@ test("does not return a project owned by another user", async () => {
           "Tasks should not be queried for an inaccessible project",
         );
       },
+
+      async deleteProjectForOwner() {
+        throw new Error("Unexpected delete");
+      },
     },
   };
 
@@ -356,6 +369,9 @@ test("createProject validates input and uses the trusted context user ID", async
       async getTasksByProjectIdForOwner() {
         return [];
       },
+      async deleteProjectForOwner() {
+        throw new Error("Unexpected delete");
+      },
     },
   };
 
@@ -382,5 +398,75 @@ test("createProject validates input and uses the trusted context user ID", async
   assert.equal(writes, 1);
   assert.deepEqual(JSON.parse(JSON.stringify(result.data)), {
     createProject: { id: "project-2", name: "New project", description: "" },
+  });
+
+  function deleteContext(
+    deleteProjectForOwner: GraphQLContext["dataAccess"]["deleteProjectForOwner"],
+  ): GraphQLContext {
+    return {
+      userId: "user-1",
+      dataAccess: {
+        deleteProjectForOwner,
+        async createProject() {
+          throw new Error("Unexpected create");
+        },
+        async updateProjectForOwner() {
+          throw new Error("Unexpected update");
+        },
+        async getProjectsByOwnerId() {
+          return [];
+        },
+        async getProjectByIdForOwner() {
+          return null;
+        },
+        async getTasksByProjectIdForOwner() {
+          return [];
+        },
+      },
+    };
+  }
+
+  const deleteProjectMutation = `
+      mutation DeleteProject($id: ID!) {
+        deleteProject(id: $id)
+      }
+    `;
+
+  test("deleteProject uses the trusted user ID and returns true", async () => {
+    const context = deleteContext(async (getProjectsByOwnerId, projectId) => {
+      assert.equal(getProjectsByOwnerId, "user-1");
+      assert.equal(projectId, "project-1");
+      return true;
+    });
+
+    const result = await graphql({
+      schema,
+      source: deleteProjectMutation,
+      contextValue: context,
+      variableValues: { id: "project-1" },
+    });
+
+    assert.equal(result.errors, undefined);
+    assert.deepEqual(JSON.parse(JSON.stringify(result.data)), {
+      deleteProject: true,
+    });
+  });
+
+  test("deleteProject returns NOT_FOUND when the project cannot be deleted", async () => {
+    const context = deleteContext(async (ownerId, projectId) => {
+      assert.equal(ownerId, "user-1");
+      assert.equal(projectId, "other-project");
+      return false;
+    });
+
+    const result = await graphql({
+      schema,
+      source: deleteProjectMutation,
+      contextValue: context,
+      variableValues: { id: "other-project" },
+    });
+
+    assert.equal(result.errors?.[0]?.extensions.code, "NOT_FOUND");
+    assert.equal(result.data, null);
   });
 });

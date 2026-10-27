@@ -23,6 +23,7 @@ export const schema = createSchema<GraphQLContext>({
     type Mutation {
       createProject(input: CreateProjectInput!): Project!
       updateProject(id: ID!, input: UpdateProjectInput!): Project!
+      deleteProject(id: ID!): Boolean!
     }
 
     type Project {
@@ -130,6 +131,20 @@ export const schema = createSchema<GraphQLContext>({
           name,
           description,
         });
+      },
+      deleteProject: async (_parent, args: { id: string }, context) => {
+        const deleted = await context.dataAccess.deleteProjectForOwner(
+          context.userId,
+          args.id,
+        );
+
+        if (!deleted) {
+          throw new GraphQLError("Project not found.", {
+            extensions: { code: "NOT_FOUND" },
+          });
+        }
+
+        return true;
       },
     },
     Query: {

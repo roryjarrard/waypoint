@@ -9,6 +9,7 @@ import {
   getProjectByIdForOwner,
   getProjectsByOwnerId,
   getTasksByProjectIdForOwner,
+  deleteProjectForOwner,
 } from "@/lib/data";
 
 export type GraphQLDataAccess = {
@@ -17,6 +18,7 @@ export type GraphQLDataAccess = {
   getProjectsByOwnerId: typeof getProjectsByOwnerId;
   getProjectByIdForOwner: typeof getProjectByIdForOwner;
   getTasksByProjectIdForOwner: typeof getTasksByProjectIdForOwner;
+  deleteProjectForOwner: typeof deleteProjectForOwner;
 };
 
 export type GraphQLContext = {
@@ -43,6 +45,7 @@ export async function createGraphQLContext(): Promise<GraphQLContext> {
       getProjectsByOwnerId,
       getProjectByIdForOwner,
       getTasksByProjectIdForOwner,
+      deleteProjectForOwner,
     },
   };
 }

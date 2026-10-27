@@ -102,6 +102,20 @@ export async function updateProjectForOwner(
   return projects[0] ? mapProject(projects[0]) : null;
 }
 
+export async function deleteProjectForOwner(
+  ownerId: string,
+  projectId: string,
+): Promise<boolean> {
+  const result = await prisma.project.deleteMany({
+    where: {
+      id: projectId,
+      ownerId,
+    },
+  });
+
+  return result.count > 0;
+}
+
 export async function getTasksByProjectIdForOwner(
   ownerId: string,
   projectId: string,
