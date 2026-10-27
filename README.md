@@ -100,8 +100,17 @@ Request identity comes from server-side configuration. It is not accepted from G
 
 ## Project Status
 
-Waypoint has established its initial project and task domain, PostgreSQL persistence through Prisma, and a read-only GraphQL foundation.
+Waypoint has established its initial project and task domain, PostgreSQL
+persistence through Prisma, and a GraphQL API for reading projects and tasks.
 
-The GraphQL API currently supports listing the development user’s projects and retrieving one owned project with its tasks. Request identity temporarily comes from server-side development configuration, and the endpoint is restricted to local development.
+Firebase Authentication supports email/password registration and sign-in,
+HTTP-only server sessions, protected application routes, sign-out, and
+automatic mapping from a Firebase identity to Waypoint’s internal user UUID.
+Project and task reads are scoped to the authenticated user.
 
-Firebase Authentication is implemented with email/password registration and sign-in, HTTP-only server sessions, protected application routes, sign-out, and automatic mapping from a Firebase identity to Waypoint’s internal user UUID. Project and task reads are scoped to the authenticated user. The next architectural slice is GraphQL mutations and client integration; GraphQL code generation and Zustand remain deferred until they provide clear value.
+Authenticated users can create, edit, and delete their own projects. Project
+writes use GraphQL mutations, and deletion includes a confirmation step.
+Deleting a project also deletes its associated tasks.
+
+The next feature is task creation and management. GraphQL code generation and
+Zustand remain deferred until they provide clear value.
