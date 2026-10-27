@@ -60,6 +60,21 @@ export async function getProjectsByOwnerId(
   return projects.map(mapProject);
 }
 
+export async function createProject(
+  ownerId: string,
+  input: { name: string; description?: string | null },
+): Promise<Project> {
+  const project = await prisma.project.create({
+    data: {
+      ownerId,
+      name: input.name,
+      description: input.description ?? null,
+    },
+  });
+
+  return mapProject(project);
+}
+
 export async function getProjectByIdForOwner(
   ownerId: string,
   projectId: string,
@@ -72,6 +87,33 @@ export async function getProjectByIdForOwner(
   });
 
   return project ? mapProject(project) : null;
+}
+
+export async function updateProjectForOwner(
+  ownerId: string,
+  projectId: string,
+  input: { name?: string; description?: string | null },
+): Promise<Project | null> {
+  const projects = await prisma.project.updateManyAndReturn({
+    where: { id: projectId, ownerId },
+    data: input,
+  });
+
+  return projects[0] ? mapProject(projects[0]) : null;
+}
+
+export async function deleteProjectForOwner(
+  ownerId: string,
+  projectId: string,
+): Promise<boolean> {
+  const result = await prisma.project.deleteMany({
+    where: {
+      id: projectId,
+      ownerId,
+    },
+  });
+
+  return result.count > 0;
 }
 
 export async function getTasksByProjectIdForOwner(
